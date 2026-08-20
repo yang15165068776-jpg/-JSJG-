@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+.env.local
+.eval-key.tmp
+请填写DeepSeekKey.txt
+.vercel

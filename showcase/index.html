@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSJG · AI 多智能体交互叙事引擎</title>
+<meta name="description" content="JSJG — 让角色拥有连续人生的 AI 交互叙事运行时。多智能体决策、显式管线编排、Writer-Reviewer 双模型质量闭环。">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f6f7f9;
+    --ink: #111418;
+    --ink-2: #5b6472;
+    --ink-3: #8a93a3;
+    --line: #e4e7ec;
+    --accent: #3b5bdb;
+    --accent-soft: #eef1fd;
+    --ok: #12b886;
+    --mono: "SFMono-Regular", "Cascadia Mono", Consolas, "Roboto Mono", monospace;
+    --sans: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--sans); color: var(--ink); background: var(--bg); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── top bar ── */
+  header.top { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.2px; }
+  .brand .logo { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: grid; place-items: center; font-family: var(--mono); font-size: 13px; font-weight: 700; }
+  nav a { color: var(--ink-2); text-decoration: none; font-size: 14px; margin-left: 22px; transition: color .15s; }
+  nav a:hover { color: var(--accent); }
+
+  /* ── hero ── */
+  .hero { padding: 96px 0 72px; }
+  .hero .eyebrow { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 1.5px; margin-bottom: 18px; }
+  .hero h1 { font-size: 46px; line-height: 1.2; font-weight: 800; letter-spacing: -0.5px; }
+  .hero h1 .hl { color: var(--accent); }
+  .hero p.sub { margin-top: 18px; font-size: 18px; color: var(--ink-2); max-width: 640px; }
+  .hero p.tech { margin-top: 10px; font-family: var(--mono); font-size: 14px; color: var(--ink-3); }
+  .hero .cta { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none; border: 1px solid var(--line); transition: all .15s; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { background: #324ed6; }
+  .btn.ghost { color: var(--ink); }
+  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── stat bar ── */
+  .stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg-soft); }
+  .stats .wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding-top: 26px; padding-bottom: 26px; }
+  .stat { text-align: center; }
+  .stat .num { font-family: var(--mono); font-size: 30px; font-weight: 700; color: var(--ink); }
+  .stat .num em { font-style: normal; color: var(--accent); }
+  .stat .lab { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+
+  /* ── section ── */
+  section { padding: 76px 0; }
+  section:nth-of-type(even) { background: var(--bg-soft); }
+  .sec-h { margin-bottom: 40px; }
+  .sec-h .kicker { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 1.2px; margin-bottom: 8px; }
+  .sec-h h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.3px; }
+  .sec-h p { margin-top: 10px; color: var(--ink-2); max-width: 640px; }
+
+  /* ── feature cards ── */
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; transition: transform .15s, box-shadow .15s, border-color .15s; }
+  .card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 8px 24px rgba(20,24,36,0.06); }
+  .card .ic { font-size: 22px; }
+  .card h3 { font-size: 16px; font-weight: 700; margin-top: 12px; }
+  .card p { margin-top: 8px; font-size: 14px; color: var(--ink-2); }
+  .card .tag { display: inline-block; margin-top: 12px; font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--accent-soft); padding: 3px 8px; border-radius: 6px; }
+
+  /* ── architecture ── */
+  .arch { background: #101318; border-radius: 14px; padding: 30px; color: #d7dbe2; font-family: var(--mono); font-size: 13px; line-height: 1.9; overflow-x: auto; white-space: pre; }
+  .arch .a { color: #ffd43b; }
+  .arch .b { color: #74c0fc; }
+  .arch .c { color: #8ce99a; }
+  .arch .d { color: #ffa94d; }
+
+  /* ── tech ── */
+  .techgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .techitem { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; }
+  .techitem b { font-size: 15px; }
+  .techitem span { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+
+  /* ── safety ── */
+  .safety { border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; background: var(--bg); }
+  .safety h3 { font-size: 17px; font-weight: 700; }
+  .safety ul { margin-top: 14px; list-style: none; }
+  .safety li { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 14px; color: var(--ink-2); }
+  .safety li:last-child { border-bottom: none; }
+  .safety li::before { content: "✓"; color: var(--ok); font-weight: 700; flex-shrink: 0; }
+
+  /* ── footer ── */
+  footer { border-top: 1px solid var(--line); padding: 30px 0 60px; }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; color: var(--ink-3); font-size: 13px; }
+  footer .mono { font-family: var(--mono); }
+
+  @media (max-width: 900px) {
+    .hero h1 { font-size: 34px; }
+    .cards { grid-template-columns: 1fr; }
+    .techgrid { grid-template-columns: 1fr; }
+    .stats .wrap { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    nav { display: none; }
+    .hero { padding: 64px 0 48px; }
+    section { padding: 56px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="logo">JS</span> JSJG</div>
+    <nav>
+      <a href="#features">核心特性</a>
+      <a href="#arch">系统架构</a>
+      <a href="#tech">技术栈</a>
+      <a href="#safety">安全治理</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">AI · MULTI-AGENT · NARRATIVE RUNTIME</div>
+    <h1>让角色拥有<span class="hl">连续人生</span>的<br>交互叙事运行时</h1>
+    <p class="sub">用户创建角色与世界观后，多个「角色智能体」在同一故事里持续行动、对话、推进关系——而不是被动等待输入。</p>
+    <p class="tech">React 18 · Vite · DeepSeek V4 · Runtime Orchestrator · 23 步显式管线</p>
+    <div class="cta">
+      <a class="btn primary" href="#features">了解核心能力 ↓</a>
+      <a class="btn ghost" href="#safety">安全与内容治理</a>
+    </div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="wrap">
+    <div class="stat"><div class="num"><em>23</em>步</div><div class="lab">显式运行时管线</div></div>
+    <div class="stat"><div class="num"><em>3</em>核</div><div class="lab">并行行为决策核</div></div>
+    <div class="stat"><div class="num"><em>10</em>维</div><div class="lab">运行时质量审计</div></div>
+    <div class="stat"><div class="num"><em>26</em>场景</div><div class="lab">自动化评估回归</div></div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-h">
+      <div class="kicker">CORE CAPABILITIES</div>
+      <h2>不是"每轮重新扮演"，而是"拥有一段人生"</h2>
+      <p>以下系统全部从零实现，不依赖现成 Agent 框架。</p>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="ic">🧠</div>
+        <h3>多智能体决策核</h3>
+        <p>三个并行行为决策核（关系行为 / 亲密张力 / 物理行动），每个 5 级强度，生成前决定角色"本轮做什么"。</p>
+        <span class="tag">DarkAction · Desire · Initiative</span>
+      </div>
+      <div class="card">
+        <div class="ic">🔄</div>
+        <h3>显式管线编排</h3>
+        <p>23 步 RuntimeOrchestrator Pipeline：输入解析 → 状态同步 → 决策 → prompt 组装 → 生成 → 审计 → 状态写回。每步独立、可插拔、可观测。</p>
+        <span class="tag">Runtime Orchestrator</span>
+      </div>
+      <div class="card">
+        <div class="ic">✍️</div>
+        <h3>Writer-Reviewer 双模型闭环</h3>
+        <p>主模型流式生成 → flash 模型独立审计（输出违规 + 原文位置 + 替换方案）→ 定向修复。只改问题部分，避免整段重写的风格漂移。</p>
+        <span class="tag">RSE · RQA · Targeted Fix</span>
+      </div>
+      <div class="card">
+        <div class="ic">🗃️</div>
+        <h3>记忆与一致性</h3>
+        <p>不可篡改事实账本 + 事件图谱与因果链 + 每轮状态抽取写回。角色的"过去"持续影响"现在"，行为有连续性。</p>
+        <span class="tag">Fact Ledger · Event Graph</span>
+      </div>
+      <div class="card">
+        <div class="ic">🎬</div>
+        <h3>自主导演系统</h3>
+        <p>独立模型每轮输出"本幕戏卡"：场景评估 / 调性 / 焦点角色 / 冲突等级 / 叙事动作，控制节奏与焦点分配。</p>
+        <span class="tag">Director OS · Scene Card</span>
+      </div>
+      <div class="card">
+        <div class="ic">⚡</div>
+        <h3>Prompt 分层缓存</h3>
+        <p>基于 LLM recency bias 特性，将指令按重要性分区（HOT / WARM / COLD）注入，诊断工具逐层展示 token 消耗。</p>
+        <span class="tag">Layered Prompt Cache</span>
+      </div>
+      <div class="card">
+        <div class="ic">💗</div>
+        <h3>好感度状态机</h3>
+        <p>独立 flash 模型裁判（非主回复模型自评），按关系阶段实时裁决并回写状态，驱动角色行为随关系演化。</p>
+        <span class="tag">Independent Affection Judge</span>
+      </div>
+      <div class="card">
+        <div class="ic">🎭</div>
+        <h3>四级人格系统</h3>
+        <p>每个角色按人格画像（攻略型 / 对抗型 / 高冷型 / 温和型）获得差异化的行为上限、进攻性与语言风格。</p>
+        <span class="tag">4 Personality Profiles</span>
+      </div>
+      <div class="card">
+        <div class="ic">🔬</div>
+        <h3>自动化评估回归</h3>
+        <p>26 个场景的固定评测集 + 确定性规则 + 一键回归脚本，发布级检查不依赖"另一个模型恰好注意到问题"。</p>
+        <span class="tag">Eval Regression</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="arch">
+  <div class="wrap">
+    <div class="sec-h">
+      <div class="kicker">ARCHITECTURE</div>
+      <h2>运行时自主叙事闭环</h2>
+      <p>欲望 → 行动 → 事件 → 执行 → 状态写回，每轮完整运转。</p>
+    </div>
+    <div class="arch"><span class="a">┌──────────────────────────────────────────────────────────────┐
+│  RuntimeOrchestrator Pipeline（23 步，每轮执行）            │
+│                                                              │
+│  ① 输入解析 ──► ③ 状态同步 ──► ⑤ 行为核决策（3 核并行）     │
+│  ──► ⑦ 导演决策（Scene Card）──► ⑧ Prompt 分层组装          │
+│  ──► ⑨ 主模型流式生成 ──► ⑩ RSE 审计 ──► ⑪ 定向修复         │
+│  ──► ⑫ RQA 审计 ──► ⑬ 状态写回 ──► ⑭ 持久化                 │
+└──────────────────────────────────────────────────────────────┘</span>
+        <span class="b">       ▼             ▼             ▼
+   <span class="c">决策层</span>          <span class="d">状态层</span>          <span class="c">评价层</span>
+   行为核 ×3       USK 统一状态    好感度裁判
+   导演大脑        Fact Ledger    RQA 审计
+   人格系统        Event Graph    RSE Review
+                    记忆图谱        确定性回归</span></div>
+  </div>
+</section>
+
+<section id="tech">
+  <div class="wrap">
+    <div class="sec-h">
+      <div class="kicker">TECH STACK</div>
+      <h2>工程栈</h2>
+    </div>
+    <div class="techgrid">
+      <div class="techitem"><b>React 18</b><span>UI</span></div>
+      <div class="techitem"><b>Vite</b><span>构建</span></div>
+      <div class="techitem"><b>DeepSeek V4</b><span>LLM · 128K 上下文</span></div>
+      <div class="techitem"><b>localStorage</b><span>存档隔离持久化</span></div>
+      <div class="techitem"><b>Node.js</b><span>评估 / 文档生成</span></div>
+      <div class="techitem"><b>Vercel</b><span>部署</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="safety">
+  <div class="wrap">
+    <div class="sec-h">
+      <div class="kicker">SAFETY &amp; GOVERNANCE</div>
+      <h2>安全与内容治理</h2>
+      <p>内容安全不是事后补救，而是运行时的一等公民。</p>
+    </div>
+    <div class="safety">
+      <h3>内建的确定性治理层</h3>
+      <ul>
+        <li><b>运行时安全守卫</b> —— 高优先级确定性防护：戏剧写作指令不得覆盖事实锚定 / 操作安全 / 未决修复步骤；全规则驱动、无 LLM 依赖、可单测。</li>
+        <li><b>确定性评估规则</b> —— 对固定评测集提供发布级检查，不依赖模型自觉。</li>
+        <li><b>自动化评估回归</b> —— 26 场景评测集 + 自动运行 + 结果导出，一键回归。</li>
+        <li><b>双模型独立审计</b> —— 生成后由独立模型审计，发现问题走定向修复，而非静默放行。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>JSJG · AI 多智能体交互叙事引擎</span>
+    <span class="mono">独立开发 · 个人工程实践</span>
+  </div>
+</footer>
+
+</body>
+</html>
